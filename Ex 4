@@ -3,7 +3,6 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 import numpy as np
 
-# 숫자 이미지 데이터셋 로드
 digits = load_digits()
 data = digits.images.reshape(-1, 8*8)
 
