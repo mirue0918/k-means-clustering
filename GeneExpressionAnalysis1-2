@@ -1,26 +1,17 @@
-from sklearn.decomposition import PCA
-import matplotlib.pyplot as plt
-import seaborn as sns
+# 각 클러스터의 평균 발현값 (유전자 단위 평균, 모든 샘플에 대해)
+cluster_means = df.groupby('cluster').mean()
 
-X = df.iloc[:, :-1].values
+# 클러스터별 전체 발현값 평균
+cluster_expr_mean = cluster_means.mean(axis=1)
 
-pca = PCA(n_components=2)
-X_pca = pca.fit_transform(X)
+# 가장 많이 발현된 클러스터 ID
+top_cluster_id = cluster_expr_mean.idxmax()
+print(f"📌 가장 평균 발현량이 높은 클러스터: {top_cluster_id}")
 
-labels = df['cluster'].values
+# 해당 클러스터의 유전자 추출
+high_expr_genes = df[df['cluster'] == top_cluster_id].index.tolist()
 
-pca_df = pd.DataFrame({
-    'PC1': X_pca[:, 0],
-    'PC2': X_pca[:, 1],
-    'cluster': labels,
-    'gene': df.index
-})
-
-plt.figure(figsize=(10, 6))
-sns.scatterplot(data=pca_df, x='PC1', y='PC2', hue='cluster', palette='Set2', s=30, alpha=0.7)
-plt.title('유전자 기준 K-평균 클러스터링 (PCA 시각화)')
-plt.xlabel('PC1')
-plt.ylabel('PC2')
-plt.legend(title='Cluster')
-plt.grid(True)
-plt.show()
+print(f"✅ 클러스터 {top_cluster_id}에 속한 유전자 수: {len(high_expr_genes)}")
+print("🔝 일부 유전자(probe ID) 예시:")
+for gene in high_expr_genes[:10]:
+    print("-", gene)
