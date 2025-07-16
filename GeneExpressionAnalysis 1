@@ -1,14 +1,9 @@
-from google.colab import files
-uploaded = files.upload()
-
 import pandas as pd
 
-file_path = 'GSE10072_series_matrix.txt' ##파일 이름 수정하기
+# 예: GEO 시리즈 매트릭스 형식의 텍스트 파일 불러오기
 filename = 'GSE10072_series_matrix.txt'  # 업로드한 파일 이름으로 수정
 
-data = pd.read_csv(file_path, sep='\t', comment='!', index_col=0)
-data.head()
-
+# 헤더 행 탐색 및 불필요한 메타데이터 제거
 with open(filename) as f:
     for i, line in enumerate(f):
         if line.startswith("!series_matrix_table_begin"):
@@ -18,24 +13,32 @@ with open(filename) as f:
             break
 
 df = pd.read_csv(filename, sep='\t', skiprows=start, nrows=end-start-1, index_col=0)
-df = df.dropna()  
-df = df[~df.index.str.startswith('AFFX')]  
-##전처리 끝
+df = df.dropna()  # 결측치 제거
+df = df[~df.index.str.startswith('AFFX')]  # 컨트롤 probe 제거 (optional)
 
 print("데이터 크기:", df.shape)  # (유전자/probe 수, 샘플 수)
 
 from sklearn.cluster import KMeans
 import numpy as np
 
+# 유전자 기준으로 클러스터링하므로, 행이 유전자
+# → 각 유전자는 벡터(s1, s2, ..., sn)로 간주됨
 X = df.values  # shape: (genes, samples)
 
-##k값 선정
+# 클러스터 개수 설정 (예: 4개)
 k = 4
 kmeans = KMeans(n_clusters=k, random_state=42, n_init='auto')
 clusters = kmeans.fit_predict(X)
 
+# 클러스터 결과를 DataFrame에 추가
 df['cluster'] = clusters
 
+# 각 클러스터의 평균 발현값 확인
+mean_expr = df.groupby('cluster').mean().mean(axis=1)
+top_cluster = mean_expr.idxmax()
+print(f"발현량이 가장 높은 클러스터: {top_cluster}")
 
-for gene in high_expr_genes[:10]:  # 일부만 출력
-    print(gene)
+# 해당 클러스터의 유전자(probe ID) 추출
+high_expr_genes = df[df['cluster'] == top_cluster].index.tolist()
+
+print("해당 클러스터에 포함된 유전자 수:", len(high_expr_genes))
