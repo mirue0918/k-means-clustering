@@ -1,0 +1,21 @@
+from sklearn.cluster import KMeans
+import matplotlib.pyplot as plt
+
+X = df.values 
+
+wss = [] 
+K_range = range(1, 11)  # k=1~10까지 시도
+
+for k in K_range:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(X)
+    wss.append(kmeans.inertia_) 
+
+plt.figure(figsize=(8, 5))
+plt.plot(K_range, wss, marker='o')
+plt.title('optimal K')
+plt.xlabel('K')
+plt.ylabel('WSS')
+plt.xticks(K_range)
+plt.grid(True)
+plt.show()
