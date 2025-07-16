@@ -1,0 +1,52 @@
+import pandas as pd
+
+df = pd.read_csv('virtual_expression.txt.txt', sep='\t', index_col=0)
+print("data:")
+display(df.head())
+
+from sklearn.cluster import KMeans
+
+# 행: 유전자, 열: 샘플
+X = df.values
+k = 3 #k값 조정
+
+kmeans = KMeans(n_clusters=k, random_state=42)
+clusters = kmeans.fit_predict(X)
+
+df['cluster'] = clusters
+
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+pca = PCA(n_components=2)
+reduced = pca.fit_transform(X)
+
+plot_df = pd.DataFrame(reduced, columns=['PC1', 'PC2'])
+plot_df['cluster'] = clusters
+plot_df['gene'] = df.index
+
+
+plt.figure(figsize=(10, 6))
+sns.scatterplot(data=plot_df, x='PC1', y='PC2', hue='cluster', palette='Set2')
+plt.title("유전자 기준 K-평균 클러스터링 (PCA)")
+plt.xlabel("PC1")
+plt.ylabel("PC2")
+plt.legend(title='Cluster')
+plt.grid(True)
+plt.show()
+
+## 발현값 계산
+df_mean = df.drop(columns='cluster').groupby(df['cluster']).mean()
+cluster_avg_expr = df_mean.mean(axis=1)
+
+## 가장 발현량 높은 클러스터 ID
+top_cluster = cluster_avg_expr.idxmax()
+print(f"가장 많이 발현된 클러스터: {top_cluster}")
+
+##유전자 목록?
+top_genes = df[df['cluster'] == top_cluster].drop(columns='cluster')
+
+top_genes['mean_expr'] = top_genes.mean(axis=1)
+top_gene = top_genes['mean_expr'].idxmax()
+print(f"가장 많이 발현된 유전자: {top_gene}")
