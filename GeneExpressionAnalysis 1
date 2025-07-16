@@ -36,5 +36,7 @@ clusters = kmeans.fit_predict(X)
 
 df['cluster'] = clusters
 
+ㅡㄷㅁ
+
 for gene in high_expr_genes[:10]:  # 일부만 출력
     print(gene)
